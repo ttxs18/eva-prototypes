@@ -1,1 +1,563 @@
-docs/outputs/prototypes/2026-06-08_测试html_原型.html
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>测试html - EVA 后台列表原型</title>
+  <style>
+    :root {
+      --primary: #2f6fed;
+      --primary-soft: #eaf1ff;
+      --border: #edf0f5;
+      --text: #1f2937;
+      --muted: #7b8794;
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --danger: #ff4d4f;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+      background: var(--bg);
+    }
+
+    .app {
+      display: grid;
+      grid-template-columns: 44px 112px 1fr;
+      min-height: 100vh;
+    }
+
+    .icon-rail {
+      background: #fff;
+      border-right: 1px solid var(--border);
+      padding-top: 12px;
+    }
+
+    .rail-item {
+      width: 44px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      color: #4b5563;
+      font-size: 12px;
+      cursor: default;
+    }
+
+    .rail-item.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-left: 3px solid var(--primary);
+    }
+
+    .side-menu {
+      background: #fff;
+      border-right: 1px solid var(--border);
+      padding: 12px 0;
+    }
+
+    .side-title {
+      padding: 0 14px 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .menu-group {
+      margin: 8px 0;
+    }
+
+    .menu-title,
+    .menu-link {
+      display: flex;
+      align-items: center;
+      height: 34px;
+      padding: 0 14px;
+      font-size: 12px;
+      color: #374151;
+    }
+
+    .menu-link.active {
+      color: var(--primary);
+      background: var(--primary-soft);
+      border-right: 2px solid var(--primary);
+    }
+
+    .workspace {
+      min-width: 960px;
+      overflow: auto;
+    }
+
+    .topbar {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 16px;
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .tab {
+      color: #374151;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #6b7280;
+    }
+
+    .prd-link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 600;
+    }
+
+    .presentation-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: #fff;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .presentation-toggle input {
+      accent-color: var(--primary);
+    }
+
+    .content {
+      padding: 10px 12px 16px;
+    }
+
+    .filter-card,
+    .table-card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+    }
+
+    .filter-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      margin-bottom: 8px;
+    }
+
+    .input,
+    .select {
+      height: 28px;
+      min-width: 128px;
+      padding: 0 10px;
+      border: 1px solid #dbe1ea;
+      border-radius: 3px;
+      color: #6b7280;
+      font-size: 12px;
+      background: #fff;
+    }
+
+    .button {
+      height: 28px;
+      padding: 0 12px;
+      border: 1px solid #dbe1ea;
+      border-radius: 3px;
+      background: #fff;
+      color: #374151;
+      font-size: 12px;
+    }
+
+    .button.primary {
+      border-color: var(--primary);
+      color: #fff;
+      background: var(--primary);
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .table-wrap {
+      min-height: 430px;
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    th,
+    td {
+      height: 38px;
+      padding: 0 12px;
+      border-bottom: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      text-align: left;
+      white-space: nowrap;
+    }
+
+    th {
+      height: 34px;
+      background: #f8fafc;
+      color: #374151;
+      font-weight: 600;
+    }
+
+    td {
+      color: #4b5563;
+    }
+
+    th:last-child,
+    td:last-child {
+      border-right: none;
+    }
+
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #1f7a4d;
+    }
+
+    .switch {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      display: inline-block;
+      border-radius: 999px;
+      background: var(--primary);
+      vertical-align: middle;
+    }
+
+    .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+    }
+
+    .link {
+      color: var(--primary);
+      margin-right: 10px;
+      text-decoration: none;
+      cursor: default;
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      height: 42px;
+      padding: 0 10px;
+      font-size: 12px;
+      color: #6b7280;
+      border-top: 1px solid var(--border);
+    }
+
+    .page,
+    .page-active {
+      min-width: 24px;
+      height: 24px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 3px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #6b7280;
+    }
+
+    .page-active {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .mark {
+      position: relative;
+    }
+
+    .pin {
+      display: none;
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--danger);
+      border: 2px solid #fff;
+      box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.16);
+      z-index: 5;
+    }
+
+    .tip {
+      display: none;
+      position: absolute;
+      top: 16px;
+      right: -8px;
+      width: 240px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      background: #111827;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.6;
+      box-shadow: 0 12px 28px rgba(15, 23, 42, 0.28);
+      z-index: 20;
+      white-space: normal;
+    }
+
+    .presentation-on .pin {
+      display: block;
+    }
+
+    .presentation-on .mark:hover .tip {
+      display: block;
+    }
+
+    .presentation-on .mark:hover {
+      outline: 2px solid rgba(47, 111, 237, 0.28);
+      outline-offset: 2px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <aside class="icon-rail">
+      <div class="rail-item">首页</div>
+      <div class="rail-item">订单</div>
+      <div class="rail-item">仓配</div>
+      <div class="rail-item active">店铺</div>
+      <div class="rail-item">报表</div>
+      <div class="rail-item">系统</div>
+    </aside>
+
+    <aside class="side-menu">
+      <div class="side-title">订单管理</div>
+      <div class="menu-group">
+        <div class="menu-title">平台渠道</div>
+        <div class="menu-link active">平台列表</div>
+        <div class="menu-link">平台设置</div>
+      </div>
+      <div class="menu-group">
+        <div class="menu-title">店铺设置</div>
+        <div class="menu-link">店铺列表</div>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <span>☰</span>
+        <span class="tab">首页</span>
+        <span class="tab">订单列表</span>
+        <span class="tab">平台列表</span>
+        <span class="tab">店铺列表</span>
+        <span class="tab active">测试html</span>
+        <span class="top-actions">
+          <label class="presentation-toggle">
+            <input type="checkbox" id="presentationToggle">
+            演讲模式
+          </label>
+          <a class="prd-link" href="../requirements/prd/测试html.md">完成 PRD 说明</a>
+          <span>012214</span>
+          <span>●</span>
+        </span>
+      </header>
+
+      <section class="content">
+        <div class="filter-card mark" data-requirement-id="R-001">
+          <span class="pin"></span>
+          <div class="tip">R-001 筛选区域：按截图样式提供平台名称、平台类型、状态等查询条件，用于验证原型发布流程。</div>
+          <input class="input" value="平台名称">
+          <select class="select">
+            <option>平台</option>
+          </select>
+          <select class="select">
+            <option>状态</option>
+          </select>
+          <button class="button primary">查询</button>
+          <button class="button">重置</button>
+        </div>
+
+        <div class="table-card">
+          <div class="toolbar mark" data-requirement-id="R-002">
+            <span class="pin"></span>
+            <div class="tip">R-002 操作区：保留“新增”和“导出”入口，模拟后台列表常见批量/工具操作。</div>
+            <button class="button primary">新增</button>
+            <button class="button">导出</button>
+          </div>
+
+          <div class="table-wrap mark" data-requirement-id="R-003">
+            <span class="pin"></span>
+            <div class="tip">R-003 数据列表：复刻截图中的平台、状态、代发仓、时间和行操作结构，仅用于测试 HTML 原型发布。</div>
+            <table>
+              <thead>
+                <tr>
+                  <th>平台名称</th>
+                  <th>状态</th>
+                  <th>平台</th>
+                  <th>代发仓库</th>
+                  <th>账号校验状态</th>
+                  <th>备注</th>
+                  <th>创建时间</th>
+                  <th>更新时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Shopify-CH</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Shopify</td>
+                  <td>万邑通香港仓</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2024-04-16 11:27:30</td>
+                  <td>2026-04-16 11:22:20</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Amazon BR</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Amazon</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2026-04-15 17:05:57</td>
+                  <td>2026-04-15 17:09:57</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Sharkz-TH</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Shopify</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2026-04-03 09:45:33</td>
+                  <td>2026-04-03 16:06:01</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Noon-SA</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Noon</td>
+                  <td>SG 多平台仓</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2026-04-03 09:38:24</td>
+                  <td>2026-04-03 09:49:35</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Noon-AE</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Noon</td>
+                  <td>SG 多平台仓</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2025-04-03 09:37:53</td>
+                  <td>2025-04-03 09:49:20</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Shark CA</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Shopify</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2025-02-10 09:41:01</td>
+                  <td>2025-02-18 15:24:37</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Gmarket</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Gmarket</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2025-02-04 12:03:16</td>
+                  <td>2025-02-16 16:24:33</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+                <tr>
+                  <td>Yahoo</td>
+                  <td><span class="status"><span class="switch"></span>正常</span></td>
+                  <td>Yahoo</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>--</td>
+                  <td>2023-11-22 18:33:00</td>
+                  <td>2025-11-23 14:02:30</td>
+                  <td><a class="link">查看</a><a class="link">修改</a><a class="link">删除</a><a class="link">授权配置</a></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination mark" data-requirement-id="R-004">
+            <span class="pin"></span>
+            <div class="tip">R-004 分页区：按截图展示总数、页码、每页条数和跳转页，用于检查列表页底部布局。</div>
+            <span>共 69 条</span>
+            <select class="select" style="min-width: 76px;">
+              <option>10条/页</option>
+            </select>
+            <span class="page">‹</span>
+            <span class="page-active">1</span>
+            <span class="page">2</span>
+            <span class="page">3</span>
+            <span class="page">4</span>
+            <span class="page">5</span>
+            <span class="page">6</span>
+            <span class="page">7</span>
+            <span class="page">›</span>
+            <span>前往</span>
+            <input class="input" style="min-width: 48px; width: 48px;" value="1">
+            <span>页</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const app = document.getElementById("app");
+    const toggle = document.getElementById("presentationToggle");
+    toggle.addEventListener("change", () => {
+      app.classList.toggle("presentation-on", toggle.checked);
+    });
+  </script>
+</body>
+</html>
