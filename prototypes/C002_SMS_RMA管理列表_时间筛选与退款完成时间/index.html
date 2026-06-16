@@ -732,7 +732,7 @@
               <select class="select" id="timeType" aria-label="时间类型">
                 <option value="platformRmaTimeList">平台RMA创建时间</option>
                 <option value="returnFinishTimeList">退货完成时间</option>
-                <option value="finishTimeList">RMA完成时间</option>
+                <option value="finishTimeList">RMA单完成时间</option>
                 <option value="refundFinishTimeList">退款完成时间</option>
               </select>
               <input class="input" id="startDate" type="date" value="2026-06-01" />
@@ -743,7 +743,7 @@
                 <ul>
                   <li>显示规则：将原“平台RMA创建时间”日期范围改为“时间类型下拉 + 日期范围”。</li>
                   <li>默认值：时间类型默认选中“平台RMA创建时间”。</li>
-                  <li>选项：平台RMA创建时间、退货完成时间、RMA完成时间、退款完成时间。</li>
+                  <li>选项：平台RMA创建时间、退货完成时间、RMA单完成时间、退款完成时间。</li>
                 </ul>
               </div>
             </div>
@@ -1150,7 +1150,7 @@ RMA-DEMO-260608</textarea>
     const timeTypeLabels = {
       platformRmaTimeList: "平台RMA创建时间",
       returnFinishTimeList: "退货完成时间",
-      finishTimeList: "RMA完成时间",
+      finishTimeList: "RMA单完成时间",
       refundFinishTimeList: "退款完成时间"
     };
     const timeFieldMap = {
