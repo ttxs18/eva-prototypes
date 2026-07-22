@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>C003 组合商品子SKU金额信息支持结算推送原型</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      font-size: 12px;
+      color: #303133;
+      background: #f3f5f8;
+      overflow: hidden;
+    }
+    button, input, select, textarea { font-family: inherit; font-size: 12px; }
+    .layout {
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 48px 112px 1fr;
+      background: #f3f5f8;
+    }
+    .iconbar {
+      background: #ffffff;
+      border-right: 1px solid #e6e8eb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 42px;
+      box-shadow: 2px 0 8px rgba(31,45,61,.06);
+      z-index: 3;
+    }
+    .icon-item {
+      width: 48px;
+      height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      color: #606266;
+      cursor: pointer;
+      user-select: none;
+    }
+    .icon-item.active { color: #ffffff; background: #2f73ff; }
+    .icon-symbol { font-size: 18px; line-height: 18px; color: #606266; }
+    .icon-item.active .icon-symbol { color: #f5c447; }
+    .icon-text { font-size: 11px; line-height: 12px; color: #303133; }
+    .icon-item.active .icon-text { color: #ffffff; }
+    .module-menu {
+      background: #ffffff;
+      border-right: 1px solid #e6e8eb;
+      padding-top: 10px;
+      box-shadow: 2px 0 10px rgba(31,45,61,.08);
+      z-index: 2;
+    }
+    .menu-section-title {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px 0 14px;
+      color: #303133;
+      font-weight: 600;
+    }
+    .menu-title-left { display: flex; align-items: center; gap: 6px; }
+    .menu-line-icon { color: #606266; font-size: 12px; width: 14px; text-align: center; }
+    .menu-arrow::before {
+      content: "";
+      display: block;
+      width: 6px;
+      height: 6px;
+      border: solid #303133;
+      border-width: 0 1px 1px 0;
+      transform: rotate(-135deg);
+      margin-top: 4px;
+    }
+    .menu-item {
+      height: 36px;
+      line-height: 36px;
+      padding: 0 8px 0 30px;
+      color: #606266;
+      position: relative;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .menu-item .menu-line-icon {
+      position: absolute;
+      left: 12px;
+      top: 0;
+      height: 36px;
+      line-height: 36px;
+    }
+    .menu-item.active {
+      color: #2f73ff;
+      background: #eaf1ff;
+      font-weight: 600;
+    }
+    .page { min-width: 0; display: flex; flex-direction: column; height: 100vh; }
+    .topnav {
+      height: 32px;
+      background: #ffffff;
+      border-bottom: 1px solid #e6e8eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      flex: 0 0 auto;
+    }
+    .tabs { display: flex; align-items: center; gap: 22px; color: #303133; font-size: 11px; }
+    .tab.active { color: #2f73ff; font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 10px; color: #606266; font-size: 10px; }
+    .avatar { width: 20px; height: 20px; border-radius: 50%; background: #dfe6f2; }
+    .workspace {
+      padding: 6px 6px 8px;
+      overflow: auto;
+      flex: 1 1 auto;
+    }
+    .view { display: none; }
+    .view.active { display: block; }
+    .main-box { min-height: calc(100vh - 44px); }
+    .table-box {
+      background: #ffffff;
+      border: 1px solid #edf0f5;
+      border-radius: 2px;
+      min-height: calc(100vh - 52px);
+      display: flex;
+      flex-direction: column;
+      overflow: visible;
+    }
+    .status-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .status-label { color: #606266; }
+    .pill {
+      min-width: 44px;
+      padding: 3px 9px;
+      border-radius: 999px;
+      color: #2f73ff;
+      background: #eef5ff;
+      border: 1px solid #d9e8ff;
+      text-align: center;
+      cursor: pointer;
+      font-size: 10px;
+    }
+    .pill.active { color: #ffffff; background: #2f73ff; border-color: #2f73ff; }
+    .pro-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 8px;
+      border-bottom: 1px solid #f0f2f5;
+      min-height: 38px;
+    }
+    .pro-title { font-weight: 600; font-size: 13px; }
+    .toolbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .search-grid {
+      padding: 6px 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      border-bottom: 1px solid #f0f2f5;
+    }
+    .input, .select, .textarea {
+      height: 24px;
+      border: 1px solid #dcdfe6;
+      border-radius: 2px;
+      background: #ffffff;
+      color: #606266;
+      padding: 0 6px;
+      outline: none;
+      min-width: 0;
+    }
+    .textarea { height: 54px; padding-top: 6px; resize: none; }
+    .select {
+      appearance: none;
+      background-image:
+        linear-gradient(45deg, transparent 50%, #909399 50%),
+        linear-gradient(135deg, #909399 50%, transparent 50%);
+      background-position: calc(100% - 10px) 10px, calc(100% - 6px) 10px;
+      background-size: 4px 4px, 4px 4px;
+      background-repeat: no-repeat;
+      padding-right: 16px;
+    }
+    .combo { display: grid; grid-template-columns: 140px 92px 190px; gap: 3px; }
+    .time-combo { display: grid; grid-template-columns: 130px 110px 110px; gap: 3px; }
+    .search-actions { margin-left: auto; display: flex; gap: 5px; }
+    .btn {
+      min-width: 54px;
+      height: 24px;
+      border-radius: 2px;
+      border: 1px solid #dcdfe6;
+      background: #ffffff;
+      color: #606266;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+    .btn.primary { color: #ffffff; background: #2f73ff; border-color: #2f73ff; }
+    .btn.plain { color: #2f73ff; background: #ffffff; border-color: #bcd4ff; }
+    .btn.link { border: 0; background: transparent; color: #2f73ff; min-width: 0; padding: 0 4px; height: 20px; }
+    .btn.danger { color: #f56c6c; border-color: #fbc4c4; background: #fff; }
+    .btn:disabled { color: #c0c4cc; background: #f5f7fa; border-color: #e4e7ed; cursor: not-allowed; }
+    .tabs-line {
+      display: flex;
+      gap: 26px;
+      height: 36px;
+      align-items: center;
+      padding: 0 12px;
+      border-bottom: 1px solid #e4e7ed;
+      background: #fff;
+    }
+    .tabs-line .line-tab { height: 36px; line-height: 36px; color: #606266; cursor: pointer; position: relative; }
+    .tabs-line .line-tab.active { color: #2f73ff; font-weight: 600; }
+    .tabs-line .line-tab.active::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      background: #2f73ff;
+    }
+    .table-wrap { overflow: auto; flex: 1 1 auto; min-height: 0; position: relative; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; table-layout: fixed; background: #fff; }
+    .product-list-table { min-width: 1360px; }
+    .order-list-table { min-width: 2200px; }
+    .dialog-product-table { min-width: 1280px; }
+    .dialog-order-table { min-width: 1340px; }
+    th, td {
+      border-right: 1px solid #ebeef5;
+      border-bottom: 1px solid #ebeef5;
+      padding: 7px 8px;
+      height: 34px;
+      vertical-align: middle;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    th { background: #f5f7fa; color: #606266; font-weight: 600; text-align: left; }
+    td.center, th.center { text-align: center; }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+    .fixed-left { position: sticky; left: 0; z-index: 3; background: #ffffff; }
+    th.fixed-left { background: #f5f7fa; z-index: 4; }
+    .fixed-right {
+      position: sticky;
+      right: 0;
+      z-index: 5;
+      background: #ffffff !important;
+      background-clip: padding-box;
+      box-shadow: -4px 0 8px rgba(31,45,61,.10);
+    }
+    th.fixed-right { background: #f5f7fa !important; z-index: 6; }
+    .fixed-right::before {
+      content: "";
+      position: absolute;
+      left: -8px;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      background: linear-gradient(90deg, rgba(255,255,255,0), #ffffff);
+      pointer-events: none;
+    }
+    .table-img { width: 36px; height: 36px; border-radius: 2px; background: linear-gradient(135deg,#eef3ff,#dfe8ff); border: 1px solid #d9e3f8; display: inline-block; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 20px;
+      padding: 0 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      border: 1px solid transparent;
+    }
+    .tag.green { color: #1f9d55; background: #edf9f0; border-color: #c7ecd2; }
+    .tag.blue { color: #2f73ff; background: #eef5ff; border-color: #d7e7ff; }
+    .tag.orange { color: #d98500; background: #fff7e6; border-color: #ffe0a3; }
+    .tag.red { color: #f56c6c; background: #fef0f0; border-color: #fde2e2; }
+    .pager {
+      height: 36px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding: 0 10px;
+      color: #606266;
+      border-top: 1px solid #f0f2f5;
+    }
+    .small-page { width: 24px; height: 22px; border: 1px solid #dcdfe6; display: inline-flex; align-items: center; justify-content: center; border-radius: 2px; }
+    .small-page.active { color: #fff; background: #2f73ff; border-color: #2f73ff; }
+    .dialog-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.42);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 50px;
+      z-index: 20;
+    }
+    .dialog-mask.open { display: flex; }
+    .dialog {
+      background: #ffffff;
+      border-radius: 3px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.18);
+      display: flex;
+      flex-direction: column;
+      max-height: calc(100vh - 80px);
+      overflow: hidden;
+    }
+    .dialog.product { width: 85vw; }
+    .dialog.order { width: 80vw; }
+    .dialog.confirm { width: 420px; margin-top: 120px; }
+    .dialog-title {
+      height: 44px;
+      padding: 0 16px;
+      border-bottom: 1px solid #ebeef5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .close { color: #909399; cursor: pointer; font-size: 18px; }
+    .dialog-body { padding: 14px 16px; overflow: auto; }
+    .dialog-footer {
+      height: 48px;
+      padding: 10px 16px;
+      border-top: 1px solid #ebeef5;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+    .sku-layout { display: grid; grid-template-columns: 160px 1fr; gap: 14px; }
+    .sku-left {
+      min-height: 430px;
+      background: #fff;
+      border: 1px solid #ebeef5;
+      border-radius: 2px;
+      padding: 16px 12px;
+      text-align: center;
+    }
+    .upload-box {
+      width: 135px;
+      height: 135px;
+      margin: 0 auto;
+      border: 1px dashed #c0c4cc;
+      background: #fafafa;
+      color: #909399;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .sku-right { border: 1px solid #ebeef5; padding: 12px; min-width: 0; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 18px;
+      margin-bottom: 12px;
+    }
+    .form-row { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 8px; }
+    .form-row label { text-align: right; color: #606266; }
+    .form-row label::after { content: ":"; }
+    .section-title { font-weight: 600; padding: 14px 0 10px; }
+    .divider-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 14px 0 10px;
+      color: #303133;
+      font-weight: 600;
+    }
+    .divider-title::before, .divider-title::after { content: ""; height: 1px; background: #ebeef5; flex: 1; }
+    .card {
+      border: 1px solid #ebeef5;
+      border-radius: 3px;
+      background: #fff;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 3px rgba(31,45,61,.04);
+    }
+    .el-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px 16px;
+    }
+    .amount-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px 12px;
+      padding: 10px 16px 4px 80px;
+      background: #fbfcff;
+    }
+    .amount-cell { min-height: 26px; white-space: normal; color: #606266; }
+    .son-cost-wrap {
+      margin: 2px 16px 12px 80px;
+      width: calc(100% - 96px);
+      position: relative;
+    }
+    .son-cost-table { width: 100%; }
+    .child-line { height: 48px; line-height: 48px; border-bottom: 1px solid #ebeef5; }
+    .child-line:last-child { border-bottom: 0; }
+    .money-input { width: 92px; text-align: right; }
+    .field-error {
+      border-color: #f56c6c !important;
+      background: #fff7f7 !important;
+    }
+    .inline-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: 8px;
+      color: #f56c6c;
+      font-size: 11px;
+    }
+    .toast {
+      position: fixed;
+      top: 48px;
+      left: 50%;
+      transform: translateX(-50%);
+      min-width: 220px;
+      height: 34px;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      color: #1f9d55;
+      background: #f0f9eb;
+      border: 1px solid #c2e7b0;
+      border-radius: 3px;
+      z-index: 80;
+      box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    }
+    .toast.show { display: flex; }
+    .export-drawer {
+      position: fixed;
+      top: 0;
+      right: -720px;
+      width: 720px;
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid #e6e8eb;
+      box-shadow: -4px 0 18px rgba(0,0,0,.12);
+      transition: right .18s ease;
+      z-index: 32;
+      display: flex;
+      flex-direction: column;
+    }
+    .export-drawer.open { right: 0; }
+    .drawer-title {
+      height: 48px;
+      padding: 0 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #ebeef5;
+      font-weight: 600;
+    }
+    .drawer-body { padding: 14px; overflow: auto; flex: 1; }
+    .note {
+      padding: 8px 10px;
+      border: 1px solid #d7e7ff;
+      background: #f4f8ff;
+      color: #606266;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      border-radius: 2px;
+    }
+    .float-control {
+      position: fixed;
+      top: 48px;
+      right: 24px;
+      z-index: 90;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 10px;
+      border: 1px solid #dcdfe6;
+      border-radius: 18px;
+      background: rgba(255,255,255,.96);
+      box-shadow: 0 3px 14px rgba(31,45,61,.15);
+      user-select: none;
+    }
+    .drag-handle { color: #909399; cursor: move; font-size: 15px; line-height: 1; }
+    .switch { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; color: #303133; }
+    .switch input { margin: 0; }
+    .prd-drawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: 420px;
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid #e6e8eb;
+      box-shadow: -4px 0 18px rgba(0,0,0,.12);
+      transition: right .18s ease;
+      z-index: 85;
+      display: flex;
+      flex-direction: column;
+    }
+    .prd-drawer.open { right: 0; }
+    .req-target { position: relative; overflow: visible; }
+    .fixed-left.req-target { position: sticky; }
+    .fixed-right.req-target { position: sticky; }
+    td.req-target,
+    th.req-target {
+      overflow: hidden;
+      padding-right: 48px;
+    }
+    #R-001-entry,
+    #R-002-entry {
+      padding-right: 8px;
+    }
+    .req-dot {
+      display: none;
+      position: absolute;
+      top: 3px;
+      right: 3px;
+      min-width: 36px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      color: #fff;
+      background: #f56c6c;
+      font-size: 10px;
+      line-height: 18px;
+      text-align: center;
+      z-index: 8;
+      box-shadow: 0 2px 6px rgba(245,108,108,.28);
+      pointer-events: none;
+    }
+    body.presentation .req-target { outline: 2px solid rgba(245,108,108,.55); outline-offset: 2px; }
+    body.presentation td.req-target,
+    body.presentation th.req-target,
+    body.presentation .fixed-left.req-target,
+    body.presentation .fixed-right.req-target {
+      outline: 0;
+      box-shadow: inset 0 0 0 2px rgba(245,108,108,.65), -4px 0 8px rgba(31,45,61,.10);
+    }
+    body.presentation td.req-target .req-dot,
+    body.presentation th.req-target .req-dot,
+    body.presentation .fixed-left.req-target .req-dot,
+    body.presentation .fixed-right.req-target .req-dot {
+      top: 4px;
+      right: 6px;
+    }
+    body.presentation .amount-split-start {
+      box-shadow: inset 2px 0 0 rgba(245,108,108,.70), inset 0 2px 0 rgba(245,108,108,.70), inset 0 -2px 0 rgba(245,108,108,.70);
+    }
+    body.presentation .amount-split-end {
+      box-shadow: inset -2px 0 0 rgba(245,108,108,.70), inset 0 2px 0 rgba(245,108,108,.70), inset 0 -2px 0 rgba(245,108,108,.70);
+    }
+    body.presentation .btn.req-target { outline-offset: 3px; }
+    body.presentation .btn.req-target .req-dot {
+      top: -11px;
+      right: -10px;
+    }
+    body.presentation .req-dot { display: block; }
+    .bubble {
+      display: none;
+      position: fixed;
+      z-index: 120;
+      width: min(360px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      overflow: auto;
+      padding: 10px 12px;
+      border-radius: 4px;
+      background: #303133;
+      color: #fff;
+      line-height: 1.6;
+      box-shadow: 0 6px 18px rgba(0,0,0,.22);
+      white-space: normal;
+      word-break: break-word;
+    }
+    .bubble strong { display: block; margin-bottom: 4px; color: #fff; }
+    .bubble ul { margin: 4px 0 0; padding-left: 18px; }
+    .bubble li { margin: 2px 0; }
+    .empty-mask {
+      display: none;
+      padding: 28px;
+      text-align: center;
+      color: #909399;
+    }
+    .loading-row { display: none; align-items: center; gap: 8px; color: #606266; padding: 12px; }
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #d9e8ff;
+      border-top-color: #2f73ff;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 48px 108px 1fr; }
+      .combo { grid-template-columns: 118px 80px 150px; }
+      .el-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .amount-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+  </style>
+</head>
+<body class="presentation">
+  <div class="layout">
+    <aside class="iconbar">
+      <div class="icon-item" data-module="pms"><span class="icon-symbol">▦</span><span class="icon-text">产品</span></div>
+      <div class="icon-item active" data-module="sms"><span class="icon-symbol">▤</span><span class="icon-text">订单</span></div>
+      <div class="icon-item"><span class="icon-symbol">▧</span><span class="icon-text">仓库</span></div>
+      <div class="icon-item"><span class="icon-symbol">⚙</span><span class="icon-text">系统</span></div>
+    </aside>
+
+    <aside class="module-menu" id="moduleMenu">
+      <div class="menu-block" data-menu-module="pms" style="display:none">
+        <div class="menu-section-title">
+          <span class="menu-title-left"><span class="menu-line-icon">▾</span>产品管理</span><span class="menu-arrow"></span>
+        </div>
+        <div class="menu-item active" data-view="product"><span class="menu-line-icon">•</span>产品列表</div>
+        <div class="menu-item"><span class="menu-line-icon">•</span>品牌管理</div>
+        <div class="menu-item"><span class="menu-line-icon">•</span>品类管理</div>
+      </div>
+      <div class="menu-block" data-menu-module="sms">
+        <div class="menu-section-title">
+          <span class="menu-title-left"><span class="menu-line-icon">▾</span>订单管理</span><span class="menu-arrow"></span>
+        </div>
+        <div class="menu-item"><span class="menu-line-icon">•</span>同步出单</div>
+        <div class="menu-item"><span class="menu-line-icon">•</span>RMA售后管理</div>
+        <div class="menu-item"><span class="menu-line-icon">•</span>打包台</div>
+        <div class="menu-item active" data-view="order"><span class="menu-line-icon">•</span>销售订单</div>
+      </div>
+    </aside>
+
+    <main class="page">
+      <header class="topnav">
+        <div class="tabs">
+          <span class="tab">首页</span>
+          <span class="tab">后台审核</span>
+          <span class="tab">发运通知单</span>
+          <span class="tab">RMA售后管理</span>
+          <span class="tab">SKU列表</span>
+          <span class="tab active" id="topTab">销售订单</span>
+          <span class="tab">SellerSKU绑定</span>
+          <span class="tab">同步管理</span>
+        </div>
+        <div class="top-actions">
+          <span>🔍</span><span>🔔</span><span>⚙</span><span class="avatar"></span><span>评审用户</span>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <div class="view" id="productView">
+          <div class="main-box">
+            <div class="table-box">
+              <div class="tabs-line">
+                <span class="line-tab">SKU</span>
+                <span class="line-tab active">产品组合</span>
+                <span class="line-tab">盲盒</span>
+              </div>
+              <div class="pro-header">
+                <div class="pro-title">产品列表</div>
+                <div class="toolbar">
+                  <button class="btn primary" onclick="openProductDialog('新增')">＋ 新建</button>
+                  <button class="btn plain" onclick="showToast('已生成 SKU 列表导出任务')">⬇ 导出</button>
+                </div>
+              </div>
+              <div class="search-grid">
+                <div class="combo">
+                  <select class="select"><option>创建时间</option><option>更新时间</option></select>
+                  <input class="input" value="2026-07-01" />
+                  <input class="input" value="2026-07-21" />
+                </div>
+                <input class="input" style="width:160px" value="COMBO-DEMO" placeholder="组合编码" />
+                <button class="btn primary" onclick="showToast('查询成功')">查询</button>
+                <button class="btn">重置</button>
+                <div class="search-actions">
+                  <button class="btn">列设置</button>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="product-list-table">
+                  <thead>
+                    <tr>
+                      <th style="width:70px">图片</th>
+                      <th style="width:130px">组合编码</th>
+                      <th style="width:150px">组合名称</th>
+                      <th style="width:180px">组合描述</th>
+                      <th style="width:150px">备注</th>
+                      <th style="width:90px">创建人</th>
+                      <th style="width:160px">创建时间</th>
+                      <th style="width:160px">更新时间</th>
+                      <th style="width:90px">更新人</th>
+                      <th class="fixed-right center" style="width:150px">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="tag red">组</span> <span class="table-img"></span></td>
+                      <td>COMBO-DEMO-01</td>
+                      <td>演示组合套装 A</td>
+                      <td>组合商品，用于金额分摊权重评审</td>
+                      <td>按子件权重分摊金额</td>
+                      <td>demo_user</td>
+                      <td>2026-07-18 10:20:00</td>
+                      <td>2026-07-21 15:30:00</td>
+                      <td>pm_demo</td>
+                      <td class="fixed-right center req-target" id="R-001-entry" data-requirement-id="R-001-entry">
+                        <button class="btn link" onclick="openProductDialog('查看')">查看</button>
+                        <button class="btn link" onclick="openProductDialog('编辑')">编辑</button>
+                        <button class="btn link">删除</button>
+                        <span class="req-dot">入口</span>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span class="tag red">组</span> <span class="table-img"></span></td>
+                      <td>COMBO-DEMO-02</td>
+                      <td>演示组合套装 B</td>
+                      <td>普通组合商品</td>
+                      <td>-</td>
+                      <td>demo_user</td>
+                      <td>2026-07-12 09:12:00</td>
+                      <td>2026-07-20 11:04:00</td>
+                      <td>pm_demo</td>
+                      <td class="fixed-right center">
+                        <button class="btn link">查看</button>
+                        <button class="btn link">编辑</button>
+                        <button class="btn link">删除</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pager">
+                <span>共 2 条</span><span class="small-page active">1</span><span>10条/页</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="view active" id="orderView">
+          <div class="main-box">
+            <div class="table-box">
+              <div class="status-tabs">
+                <span class="status-label">订单状态：</span>
+                <span class="pill active">全部</span><span class="pill">草稿</span><span class="pill">待审核</span><span class="pill">待发货</span><span class="pill">已发货</span><span class="pill">问题件</span><span class="pill">已取消</span>
+              </div>
+              <div class="search-grid">
+                <div class="combo">
+                  <select class="select"><option>平台订单号</option><option>系统订单号</option><option>发货通知单号</option></select>
+                  <select class="select"><option>精确</option><option>模糊</option></select>
+                  <input class="input" value="Shopify-DEMO-1243" />
+                </div>
+                <select class="select" style="width:150px"><option>演示平台</option></select>
+                <select class="select" style="width:150px"><option>演示店铺</option></select>
+                <select class="select" style="width:150px"><option>演示仓库</option></select>
+                <select class="select" style="width:150px"><option>订单属性</option></select>
+                <input class="input" style="width:130px" placeholder="sellerSku" />
+                <input class="input" style="width:130px" placeholder="sku" />
+                <div class="time-combo">
+                  <select class="select"><option>平台创建时间</option></select>
+                  <input class="input" value="2026-07-01" />
+                  <input class="input" value="2026-07-21" />
+                </div>
+                <div class="search-actions">
+                  <button class="btn primary" onclick="showToast('查询成功')">查询</button>
+                  <button class="btn">重置</button>
+                  <button class="btn">展开</button>
+                </div>
+              </div>
+              <div class="pro-header">
+                <div class="toolbar">
+                  <button class="btn primary">＋ 新增</button>
+                  <button class="btn primary">查看库存锁定明细</button>
+                  <button class="btn primary req-target" id="R-003" data-requirement-id="R-003" onclick="openExportConfirm()">⬇ 导出<span class="req-dot">R-003</span></button>
+                  <button class="btn plain">批量创建</button>
+                  <button class="btn plain">批量更新签收时间</button>
+                  <button class="btn plain">批量更新离港时间</button>
+                </div>
+                <div class="toolbar">
+                  <button class="btn">↻</button>
+                  <button class="btn">☰</button>
+                  <button class="btn">⚙</button>
+                </div>
+              </div>
+              <div class="table-wrap">
+                <table class="order-list-table">
+                  <thead>
+                    <tr>
+                      <th class="center fixed-left" style="width:40px"><input type="checkbox" /></th>
+                      <th class="fixed-left" style="left:40px;width:160px">系统订单号</th>
+                      <th style="width:150px">平台订单号</th>
+                      <th style="width:150px">发货通知单号</th>
+                      <th style="width:150px">平台</th>
+                      <th style="width:150px">店铺</th>
+                      <th style="width:150px">发货仓库</th>
+                      <th style="width:120px">下单总数量</th>
+                      <th style="width:150px">配送物流渠道</th>
+                      <th style="width:120px">订单属性</th>
+                      <th style="width:90px">状态</th>
+                      <th style="width:160px">业务异常标签</th>
+                      <th style="width:150px">仓库单号</th>
+                      <th style="width:150px">跟踪号</th>
+                      <th style="width:150px">平台创建时间</th>
+                      <th class="fixed-right center" style="width:120px">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="center fixed-left"><input type="checkbox" /></td>
+                      <td class="fixed-left req-target" id="R-002-entry" data-requirement-id="R-002-entry" style="left:40px">
+                        <button class="btn link" onclick="openOrderDialog()">SO-DEMO-24072101</button>
+                        <span class="req-dot">入口</span>
+                      </td>
+                      <td>PLAT-DEMO-240721</td>
+                      <td>SHIP-DEMO-001</td>
+                      <td>演示平台</td>
+                      <td>演示店铺</td>
+                      <td>演示仓库</td>
+                      <td class="num">1</td>
+                      <td>标准物流</td>
+                      <td>C端销售订单</td>
+                      <td><span class="tag green">已审核</span></td>
+                      <td>-</td>
+                      <td>WH-DEMO-001</td>
+                      <td>TRK-DEMO-001</td>
+                      <td>2026-07-21 09:10:00</td>
+                      <td class="fixed-right center">
+                        <button class="btn link" onclick="openOrderDialog()">查看</button>
+                        <button class="btn link">更多</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td class="center fixed-left"><input type="checkbox" /></td>
+                      <td class="fixed-left" style="left:40px"><button class="btn link">SO-DEMO-24072102</button></td>
+                      <td>PLAT-DEMO-240722</td>
+                      <td>SHIP-DEMO-002</td>
+                      <td>演示平台</td>
+                      <td>演示店铺</td>
+                      <td>演示仓库</td>
+                      <td class="num">2</td>
+                      <td>标准物流</td>
+                      <td>C端销售订单</td>
+                      <td><span class="tag orange">待审核</span></td>
+                      <td><span class="tag orange">地址待确认</span></td>
+                      <td>-</td>
+                      <td>-</td>
+                      <td>2026-07-20 13:45:00</td>
+                      <td class="fixed-right center"><button class="btn link">查看</button><button class="btn link">更多</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="pager">
+                <span>共 2 条</span><span class="small-page active">1</span><span>10条/页</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="dialog-mask" id="productDialogMask">
+    <div class="dialog product" role="dialog" aria-label="编辑组合产品">
+      <div class="dialog-title"><span id="productDialogTitle">编辑组合产品</span><span class="close" onclick="closeDialog('productDialogMask')">×</span></div>
+      <div class="dialog-body">
+        <div class="sku-layout">
+          <div class="sku-left">
+            <div class="upload-box"><div style="font-size:28px">▧</div><span>请上传图片</span></div>
+            <div style="margin-top:10px;color:#909399">图片大小不能超过 3M</div>
+          </div>
+          <div class="sku-right">
+            <div class="form-grid">
+              <div class="form-row"><label>组合编码</label><input class="input" value="COMBO-DEMO-01" disabled /></div>
+              <div class="form-row"><label>组合名称</label><input class="input" value="演示组合套装 A" /></div>
+              <div class="form-row" style="grid-column:1 / 3"><label>组合描述</label><textarea class="textarea">用于演示组合商品按金额分摊权重生成子 SKU 金额信息</textarea></div>
+              <div class="form-row" style="grid-column:1 / 3"><label>备注</label><textarea class="textarea">评审用假数据</textarea></div>
+            </div>
+            <div class="divider-title">组合情况</div>
+            <div style="margin: 0 0 8px 10px"><button class="btn link" onclick="addCombineRow()">添加</button></div>
+            <div class="table-wrap" style="max-height:270px">
+              <table id="combineTable" class="dialog-product-table">
+                <thead>
+                  <tr>
+                    <th class="center" style="width:50px">操作</th>
+                    <th style="width:70px">图片</th>
+                    <th style="width:180px"><span style="color:red">*</span> SKU(单品)</th>
+                    <th style="width:180px">产品名称</th>
+                    <th style="width:260px">产品描述</th>
+                    <th style="width:150px"><span style="color:red">*</span> 组合数量</th>
+                    <th class="req-target" id="R-001" data-requirement-id="R-001" style="width:160px"><span style="color:red">*</span> 金额分摊权重<span class="req-dot">R-001</span></th>
+                    <th style="width:120px">权重占比</th>
+                    <th style="width:170px">备注</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="center"><button class="btn link danger">⌫</button></td>
+                    <td><span class="table-img"></span></td>
+                    <td><select class="select" style="width:150px"><option>SKU-DEMO-A100</option></select></td>
+                    <td>演示耳机主体</td>
+                    <td>组合商品主件</td>
+                    <td><input class="input" style="width:120px" value="1" /></td>
+                    <td><input class="input money-input" data-weight value="1" oninput="recalcWeights()" /></td>
+                    <td data-ratio>100.00%</td>
+                    <td><input class="input" style="width:140px" value="主件" /></td>
+                  </tr>
+                  <tr>
+                    <td class="center"><button class="btn link danger">⌫</button></td>
+                    <td><span class="table-img"></span></td>
+                    <td><select class="select" style="width:150px"><option>SKU-DEMO-B200</option></select></td>
+                    <td>演示充电配件</td>
+                    <td>组合商品配件</td>
+                    <td><input class="input" style="width:120px" value="1" /></td>
+                    <td><input class="input money-input" data-weight value="0" oninput="recalcWeights()" /></td>
+                    <td data-ratio>0.00%</td>
+                    <td><input class="input" style="width:140px" value="配件" /></td>
+                  </tr>
+                  <tr>
+                    <td class="center"><button class="btn link danger">⌫</button></td>
+                    <td><span class="table-img"></span></td>
+                    <td><select class="select" style="width:150px"><option>SKU-DEMO-C300</option></select></td>
+                    <td>演示收纳组件</td>
+                    <td>组合商品附件</td>
+                    <td><input class="input" style="width:120px" value="1" /></td>
+                    <td><input class="input money-input" data-weight value="0" oninput="recalcWeights()" /></td>
+                    <td data-ratio>0.00%</td>
+                    <td><input class="input" style="width:140px" value="附件" /></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn" onclick="closeDialog('productDialogMask')">取消</button>
+        <button class="btn primary" onclick="saveProductDialog()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-mask" id="orderDialogMask">
+    <div class="dialog order" role="dialog" aria-label="查看订单">
+      <div class="dialog-title"><span>查看订单</span><span class="close" onclick="closeDialog('orderDialogMask')">×</span></div>
+      <div class="dialog-body">
+        <div class="section-title" style="padding-top:0">基本信息</div>
+        <div class="card">
+          <div class="el-row">
+            <div class="form-row"><label>系统订单号</label><input class="input" value="SO-DEMO-24072101" disabled /></div>
+            <div class="form-row"><label>平台订单号</label><input class="input" value="PLAT-DEMO-240721" disabled /></div>
+            <div class="form-row"><label>订单属性</label><input class="input" value="C端销售订单" disabled /></div>
+            <div class="form-row"><label>平台</label><input class="input" value="演示平台" disabled /></div>
+            <div class="form-row"><label>店铺</label><input class="input" value="演示店铺" disabled /></div>
+            <div class="form-row"><label>订单重量(KG)</label><input class="input" value="1.20" disabled /></div>
+          </div>
+        </div>
+        <div class="section-title">物流信息</div>
+        <div class="card">
+          <div class="el-row">
+            <div class="form-row"><label>发货仓库</label><input class="input" value="演示仓库" disabled /></div>
+            <div class="form-row"><label>配送物流渠道</label><input class="input" value="标准物流" disabled /></div>
+            <div class="form-row"><label>审核时间</label><input class="input" value="2026-07-21 10:10:00" disabled /></div>
+          </div>
+        </div>
+        <div class="section-title">金额信息</div>
+        <div class="card">
+          <div class="el-row">
+            <div class="form-row"><label>买家付的钱</label><input class="input" value="120.00" disabled /></div>
+            <div class="form-row"><label>产品总金额</label><input class="input" value="108.00" disabled /></div>
+            <div class="form-row"><label>运费（买家支付）</label><input class="input" value="12.00" disabled /></div>
+            <div class="form-row"><label>包装收入</label><input class="input" value="3.00" disabled /></div>
+            <div class="form-row"><label>店铺优惠</label><input class="input" value="5.00" disabled /></div>
+            <div class="form-row"><label>货币类型</label><input class="input" value="USD" disabled /></div>
+          </div>
+        </div>
+        <div style="position:relative">
+          <div class="section-title">产品信息</div>
+          <div class="card" style="padding:0">
+            <table class="dialog-order-table">
+              <thead>
+                <tr>
+                  <th class="center" style="width:50px">#</th>
+                  <th style="width:160px">sellerSku</th>
+                  <th style="width:150px">SKU</th>
+                  <th style="width:90px">图片</th>
+                  <th style="width:180px">SKU名称</th>
+                  <th class="center" style="width:90px">SKU数量</th>
+                  <th style="width:160px">商品名称</th>
+                  <th class="center" style="width:100px">下单数量</th>
+                  <th class="num" style="width:110px">商品单价</th>
+                  <th class="num" style="width:110px">商品总价</th>
+                  <th style="width:120px">业务类型</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="center"></td>
+                  <td>SELLER-COMBO-01</td>
+                  <td>
+                    <div class="child-line">SKU-DEMO-A100</div>
+                    <div class="child-line">SKU-DEMO-B200</div>
+                    <div class="child-line">SKU-DEMO-C300</div>
+                  </td>
+                  <td>
+                    <div class="child-line"><span class="table-img"></span></div>
+                    <div class="child-line"><span class="table-img"></span></div>
+                    <div class="child-line"><span class="table-img"></span></div>
+                  </td>
+                  <td>
+                    <div class="child-line">演示耳机主体</div>
+                    <div class="child-line">演示充电配件</div>
+                    <div class="child-line">演示收纳组件</div>
+                  </td>
+                  <td class="center">
+                    <div class="child-line">1</div>
+                    <div class="child-line">1</div>
+                    <div class="child-line">1</div>
+                  </td>
+                  <td>演示组合套装 A</td>
+                  <td class="center">1</td>
+                  <td class="num req-target amount-split-start" id="R-002" data-requirement-id="R-002">
+                    <span class="req-dot">R-002</span>
+                    <div class="child-line">54.00</div>
+                    <div class="child-line">36.00</div>
+                    <div class="child-line">18.00</div>
+                  </td>
+                  <td class="num amount-split-end">
+                    <div class="child-line">54.00</div>
+                    <div class="child-line">36.00</div>
+                    <div class="child-line">18.00</div>
+                  </td>
+                  <td>销售商品</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn" onclick="closeDialog('orderDialogMask')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-mask" id="exportConfirmMask">
+    <div class="dialog confirm" role="dialog" aria-label="温馨提示">
+      <div class="dialog-title"><span>温馨提示</span><span class="close" onclick="closeDialog('exportConfirmMask')">×</span></div>
+      <div class="dialog-body">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <span style="color:#e6a23c;font-size:20px">!</span>
+          <div>确认导出订单数据?</div>
+        </div>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn" onclick="closeDialog('exportConfirmMask')">取消</button>
+        <button class="btn primary" onclick="confirmExport()">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="export-drawer" id="exportDrawer">
+    <div class="drawer-title"><span>销售订单导出结果预览</span><span class="close" onclick="toggleExportDrawer(false)">×</span></div>
+    <div class="drawer-body">
+      <div class="note">
+        真实页面入口为销售订单列表的“导出”按钮；本原型用预览抽屉展示导出结果口径。组合商品导出时按组合商品子sku维度金额信息输出系统 SKU 行，避免三个子 SKU 重复父 sellerSku 金额。
+      </div>
+      <div style="display:flex; gap:8px; margin-bottom:10px">
+        <button class="btn primary" onclick="confirmExport()">重新生成</button>
+        <button class="btn" onclick="simulateExportFail()">模拟导出失败</button>
+      </div>
+      <div class="loading-row" id="exportLoading"><span class="spinner"></span>正在生成导出任务...</div>
+      <div class="note" id="exportError" style="display:none;border-color:#fde2e2;background:#fef0f0;color:#f56c6c">
+        导出失败：当前筛选范围内存在组合商品子sku维度金额信息缺失的订单，请调整筛选条件或联系后端排查同步结果。
+      </div>
+      <div id="exportResult">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:128px">系统订单号</th>
+              <th style="width:128px">sellerSku</th>
+              <th style="width:120px">系统 SKU</th>
+              <th class="num" style="width:80px">SKU数量</th>
+              <th class="num" style="width:100px">金额分摊权重</th>
+              <th class="num" style="width:110px">行应收金额</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>SO-DEMO-24072101</td><td>SELLER-COMBO-01</td><td>SKU-DEMO-A100</td><td class="num">1</td><td class="num">3</td><td class="num">56.80</td></tr>
+            <tr><td>SO-DEMO-24072101</td><td>SELLER-COMBO-01</td><td>SKU-DEMO-B200</td><td class="num">1</td><td class="num">2</td><td class="num">37.87</td></tr>
+            <tr><td>SO-DEMO-24072101</td><td>SELLER-COMBO-01</td><td>SKU-DEMO-C300</td><td class="num">1</td><td class="num">1</td><td class="num">18.93</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;color:#606266;line-height:1.7">
+          校验：三行行应收金额合计 113.60，与父 sellerSku 分摊后应收金额一致；尾差已落到分摊后绝对值最大的子行。
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="float-control" id="floatControl">
+    <span class="drag-handle" id="dragHandle">⋮⋮</span>
+    <label class="switch"><input type="checkbox" id="presentationSwitch" checked /> 演讲模式</label>
+    <button class="btn plain" onclick="togglePrdDrawer(true)">完整PRD说明</button>
+  </div>
+
+  <aside class="prd-drawer" id="prdDrawer">
+    <div class="drawer-title"><span>完整PRD说明</span><span class="close" onclick="togglePrdDrawer(false)">×</span></div>
+    <div class="drawer-body">
+      <div class="note">
+        关联评审文档：<br />
+        <a href="https://alidocs.dingtalk.com/i/nodes/m9bN7RYPWdlKzBXBfKyEp7jkWZd1wyK0" target="_blank">钉钉文档：组合商品子sku维度金额信息支持结算推送</a>
+      </div>
+      <p><strong>原型范围</strong></p>
+      <p>本 HTML 只覆盖订单流程本期涉及页面：产品列表的产品组合维护弹窗、销售订单列表及订单详情弹窗、销售订单导出入口。</p>
+      <p><strong>标注对应</strong></p>
+      <p>R-001：组合产品弹窗“组合情况”表格新增金额分摊权重。</p>
+      <p>R-002：订单详情弹窗产品信息表中，商品单价 / 商品总价从父行一份金额调整为随系统 SKU 拆成三行展示。</p>
+      <p>R-003：销售订单列表导出结果按系统 SKU 行展示正确分摊金额。</p>
+      <p><strong>边界</strong></p>
+      <p>售后 RMA / RT / 退款流程不在本期原型范围内；历史单据不补生成组合商品子sku维度金额信息。</p>
+      <p><strong>视觉说明</strong></p>
+      <p>本原型按当前前端源码结构和既有 C002 高保真样例复刻；源码无法判断的精确图标、间距和真实菜单文案，后续可按截图继续校准。</p>
+    </div>
+  </aside>
+
+  <div class="bubble" id="bubble"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const bubbles = {
+      "R-001-entry": {
+        title: "进入组合产品维护",
+        items: ["真实入口为产品列表的产品组合 Tab。", "点击行操作“编辑”进入组合产品弹窗，在弹窗内维护本次新增字段。"]
+      },
+      "R-001": {
+        title: "金额分摊权重",
+        items: ["组合情况表格新增“金额分摊权重”，与“组合数量”独立维护。", "同一组合内权重不允许全部为 0，允许部分子件权重为 0。", "保存后订单同步按各子件权重生成组合商品子sku维度金额信息。", "权重变化后页面即时计算权重占比，用于评审展示。"]
+      },
+      "R-002-entry": {
+        title: "进入订单详情",
+        items: ["真实入口为销售订单列表系统订单号或行操作“查看”。", "组合商品金额信息展示在订单详情弹窗的产品信息区域。"]
+      },
+      "R-002": {
+        title: "组合商品金额拆行展示",
+        items: ["订单详情产品信息表保持原有结构，不新增独立金额明细表。", "组合商品原先商品单价、商品总价只展示父 sellerSku 一份金额；本次随系统 SKU 子行拆成三行金额展示。", "三行金额来源于后端生成的组合商品子sku维度金额信息，合计仍等于父商品金额。"]
+      },
+      "R-003": {
+        title: "销售订单导出结果",
+        items: ["真实入口为销售订单列表“导出”按钮。", "导出结果中组合商品按系统 SKU 输出多行，金额取组合商品子sku维度金额信息。", "不再让多个子 SKU 重复父 sellerSku 的同一份金额。"]
+      }
+    };
+
+    const body = document.body;
+    const toast = document.getElementById("toast");
+    const bubble = document.getElementById("bubble");
+    const topTab = document.getElementById("topTab");
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1800);
+    }
+
+    function switchModule(module) {
+      document.querySelectorAll(".icon-item[data-module]").forEach(item => item.classList.toggle("active", item.dataset.module === module));
+      document.querySelectorAll(".menu-block").forEach(block => block.style.display = block.dataset.menuModule === module ? "block" : "none");
+      const view = module === "pms" ? "product" : "order";
+      switchView(view);
+    }
+
+    function switchView(view) {
+      document.querySelectorAll(".view").forEach(item => item.classList.remove("active"));
+      document.getElementById(view + "View").classList.add("active");
+      document.querySelectorAll(".menu-item[data-view]").forEach(item => item.classList.toggle("active", item.dataset.view === view));
+      topTab.textContent = view === "product" ? "产品列表" : "销售订单";
+      if (view === "order") closeDialog("productDialogMask");
+      if (view === "product") closeDialog("orderDialogMask");
+    }
+
+    document.querySelectorAll(".icon-item[data-module]").forEach(item => {
+      item.addEventListener("click", () => switchModule(item.dataset.module));
+    });
+    document.querySelectorAll(".menu-item[data-view]").forEach(item => {
+      item.addEventListener("click", () => switchView(item.dataset.view));
+    });
+
+    function openProductDialog(title) {
+      switchModule("pms");
+      document.getElementById("productDialogTitle").textContent = title + "组合产品";
+      document.getElementById("productDialogMask").classList.add("open");
+      recalcWeights();
+      requestAnimationFrame(() => {
+        const r1 = document.getElementById("R-001");
+        const wrap = r1 && r1.closest(".table-wrap");
+        if (!wrap) return;
+        wrap.scrollLeft = Math.max(0, r1.offsetLeft + r1.offsetWidth - wrap.clientWidth + 16);
+      });
+    }
+    function openOrderDialog() {
+      switchModule("sms");
+      document.getElementById("orderDialogMask").classList.add("open");
+    }
+    function closeDialog(id) {
+      document.getElementById(id).classList.remove("open");
+    }
+    function saveProductDialog() {
+      const isValid = validateWeights();
+      recalcWeights();
+      if (!isValid) {
+        showToast("金额分摊权重不能全部为 0");
+        return;
+      }
+      showToast("保存成功");
+      closeDialog("productDialogMask");
+    }
+    function addCombineRow() {
+      showToast("已新增一行组合子件，请维护 SKU、组合数量和金额分摊权重");
+    }
+    function recalcWeights() {
+      const weights = Array.from(document.querySelectorAll("[data-weight]"));
+      const total = weights.reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+      weights.forEach(input => {
+        const ratioCell = input.closest("tr").querySelector("[data-ratio]");
+        const value = parseFloat(input.value) || 0;
+        input.classList.toggle("field-error", total <= 0);
+        ratioCell.textContent = total ? (value / total * 100).toFixed(2) + "%" : "0.00%";
+      });
+    }
+    function validateWeights() {
+      return Array.from(document.querySelectorAll("[data-weight]")).some(input => (parseFloat(input.value) || 0) > 0);
+    }
+    function openExportConfirm() {
+      switchModule("sms");
+      document.getElementById("exportConfirmMask").classList.add("open");
+    }
+    function confirmExport() {
+      closeDialog("exportConfirmMask");
+      toggleExportDrawer(true);
+      const loading = document.getElementById("exportLoading");
+      const result = document.getElementById("exportResult");
+      const error = document.getElementById("exportError");
+      error.style.display = "none";
+      result.style.display = "block";
+      loading.style.display = "flex";
+      result.style.opacity = ".35";
+      setTimeout(() => {
+        loading.style.display = "none";
+        result.style.opacity = "1";
+        showToast("导出任务已生成");
+      }, 700);
+    }
+    function simulateExportFail() {
+      toggleExportDrawer(true);
+      document.getElementById("exportLoading").style.display = "none";
+      document.getElementById("exportResult").style.display = "none";
+      document.getElementById("exportError").style.display = "block";
+    }
+    function toggleExportDrawer(open) {
+      document.getElementById("exportDrawer").classList.toggle("open", open);
+    }
+    function togglePrdDrawer(open) {
+      document.getElementById("prdDrawer").classList.toggle("open", open);
+    }
+
+    document.getElementById("presentationSwitch").addEventListener("change", e => {
+      body.classList.toggle("presentation", e.target.checked);
+      bubble.style.display = "none";
+    });
+
+    document.querySelectorAll(".req-target").forEach(el => {
+      el.addEventListener("mouseenter", () => {
+        if (!body.classList.contains("presentation")) return;
+        const data = bubbles[el.dataset.requirementId];
+        if (!data) return;
+        bubble.innerHTML = `<strong>${data.title}</strong><ul>${data.items.map(item => `<li>${item}</li>`).join("")}</ul>`;
+        bubble.style.display = "block";
+        bubble.style.left = "0px";
+        bubble.style.top = "0px";
+        const rect = el.getBoundingClientRect();
+        const gap = 10;
+        const margin = 12;
+        const bubbleWidth = bubble.offsetWidth;
+        const bubbleHeight = bubble.offsetHeight;
+        const spaceRight = window.innerWidth - rect.right;
+        const spaceLeft = rect.left;
+        let left;
+        if (spaceRight >= bubbleWidth + gap) {
+          left = rect.right + gap;
+        } else if (spaceLeft >= bubbleWidth + gap) {
+          left = rect.left - bubbleWidth - gap;
+        } else {
+          left = Math.min(Math.max(margin, rect.left), window.innerWidth - bubbleWidth - margin);
+        }
+        let top = rect.top;
+        if (top + bubbleHeight > window.innerHeight - margin) {
+          top = Math.max(margin, window.innerHeight - bubbleHeight - margin);
+        }
+        if (top < margin) top = margin;
+        bubble.style.left = `${left}px`;
+        bubble.style.top = `${top}px`;
+      });
+      el.addEventListener("mouseleave", () => {
+        bubble.style.display = "none";
+      });
+    });
+
+    (function enableDrag() {
+      const panel = document.getElementById("floatControl");
+      const handle = document.getElementById("dragHandle");
+      let dragging = false, sx = 0, sy = 0, ox = 0, oy = 0;
+      handle.addEventListener("mousedown", e => {
+        dragging = true;
+        sx = e.clientX; sy = e.clientY;
+        const rect = panel.getBoundingClientRect();
+        ox = rect.left; oy = rect.top;
+        e.preventDefault();
+      });
+      window.addEventListener("mousemove", e => {
+        if (!dragging) return;
+        const nextLeft = Math.max(8, Math.min(window.innerWidth - panel.offsetWidth - 8, ox + e.clientX - sx));
+        const nextTop = Math.max(8, Math.min(window.innerHeight - panel.offsetHeight - 8, oy + e.clientY - sy));
+        panel.style.left = nextLeft + "px";
+        panel.style.top = nextTop + "px";
+        panel.style.right = "auto";
+      });
+      window.addEventListener("mouseup", () => dragging = false);
+    })();
+  </script>
+</body>
+</html>
